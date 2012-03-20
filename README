@@ -1,0 +1,2 @@
+This script learns spam and ham mails within 24 hours. Optionally,
+it can purge the old mail 7 days ago.

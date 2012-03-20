@@ -1,0 +1,4 @@
+/var/log/sa-learn-all.log {
+    notifempty
+    missingok
+}

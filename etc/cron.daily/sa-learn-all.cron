@@ -1,0 +1,9 @@
+#!/bin/sh
+
+USERS=`ls /home | grep -v lost+found`
+LOGFILE=/var/log/sa-learn-all.log
+
+for USER in $USERS; do
+  echo "`LANG=C date '+%b %e %T'` [NOTICE] Learning the mails for $USER..." >> $LOGFILE
+  su - $USER --shell=/bin/sh --command="sa-learn-all -p" >> $LOGFILE
+done

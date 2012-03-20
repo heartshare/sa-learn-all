@@ -1,0 +1,93 @@
+#!/bin/sh
+######################################################################
+# @(#) Learning mails for SpmaAssassin
+#
+# This script learns spam and ham mails within 24 hours. Optionally,
+# it can purge the old mail 7 days ago.
+#
+#  Author: Tats SHIBATA
+# Licenct: http://rewse.jp/license/2012.01.txt
+#
+# Copyright (c) 2012 Rewse Lab. All rights reserved.
+#
+######################################################################
+
+trap 'exit 1' 1 2 3 15
+
+NEEDTO_REMOVE_DB=0
+NEEDTO_PURGE=0
+LEARN_PERIOD="-mtime -1"
+PURGE_PERIOD="-mtime +6"
+
+# {{{ show_usage
+
+show_usage() {
+  cat <<! >&2
+[USAGE] sa-learn-all [-fp]
+
+-f    Learn all mails in the mailboxes
+-p    Purge old spam mails
+!
+
+exit 1
+}
+
+# }}}
+# {{{ now
+
+now() {
+  LANG=C date '+%b %e %T'
+}
+
+# }}}
+# {{{ Options
+
+while getopts fph OPT; do
+  case $OPT in
+    f)
+      LEARN_PERIOD=""
+      NEEDTO_REMOVE_DB=1
+      ;;
+    p) NEEDTO_PURGE=1 ;;
+    h) show_usage ;;
+  esac
+done
+
+if [ `whoami` == root ]; then
+  echo "[ERROR] The user must not be root" >&2
+  show_usage
+fi
+
+# }}}
+# {{{ Main
+
+echo "`now` [NOTICE] Learning begins..."
+
+MAILDIR=$HOME/Maildir
+
+if [ $NEEDTO_REMOVE_DB -eq 1 ]; then
+  echo "`now` [NOTICE] Removing the SpamAssassin database..."
+  rm -rf $HOME/.spamassassin
+fi
+
+echo "`now` [NOTICE] Learning the ham mails in INBOX..."
+find $MAILDIR/cur -type f $LEARN_PERIOD -print0 2> /dev/null |
+  xargs -0 sa-learn --ham --no-sync
+
+echo "`now` [NOTICE] Learning the ham mails in the other boxes..."
+find $MAILDIR/.INBOX*/cur -type f $LEARN_PERIOD -print0 2> /dev/null |
+  xargs -0 sa-learn --ham --no-sync
+
+echo "`now` [NOTICE] Learning the spam mails in .Junk..."
+find $MAILDIR/.Junk/cur -type f $LEARN_PERIOD -print0 2> /dev/null |
+  xargs -0 sa-learn --spam --no-sync
+
+echo "`now` [NOTICE] Updating the SpamAssassin databse..."
+sa-learn --sync
+
+if [ $NEEDTO_PURGE -eq 1 ]; then
+  echo "`now` [NOTICE] Purging the old spams..."
+  find $MAILDIR/.Junk/cur -type f $PURGE_PERIOD -print0 | xargs -0 rm -f
+fi
+
+echo "`now` [NOTICE] Learning ended"
