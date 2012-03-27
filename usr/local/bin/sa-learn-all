@@ -64,27 +64,33 @@ fi
 
 echo "`now` [NOTICE] Learning begins..."
 
-if [ $NEEDTO_REMOVE_DB -eq 1 ]; then
+if [ $NEEDTO_REMOVE_DB -eq 1 -a -f $HOME/.spamassassin ]; then
   echo "`now` [NOTICE] Removing the SpamAssassin database..."
   rm -rf $HOME/.spamassassin
 fi
 
-echo "`now` [NOTICE] Learning the ham mails in INBOX..."
-find $MAILDIR/cur -type f $LEARN_PERIOD -print0 2> /dev/null |
-  xargs -0 sa-learn --ham --no-sync
+if [ -d $MAILDIR/cur ]; then
+  echo "`now` [NOTICE] Learning the ham mails in INBOX..."
+  find $MAILDIR/cur -type f $LEARN_PERIOD -print0 2> /dev/null |
+    xargs -0 sa-learn --ham --no-sync
+fi
 
-echo "`now` [NOTICE] Learning the ham mails in the other boxes..."
-find $MAILDIR/.INBOX*/cur -type f $LEARN_PERIOD -print0 2> /dev/null |
-  xargs -0 sa-learn --ham --no-sync
+if [ -d $MAILDIR/.INBOX*/cur ]; then
+  echo "`now` [NOTICE] Learning the ham mails in the other boxes..."
+  find $MAILDIR/.INBOX*/cur -type f $LEARN_PERIOD -print0 2> /dev/null |
+    xargs -0 sa-learn --ham --no-sync
+fi
 
-echo "`now` [NOTICE] Learning the spam mails in .Junk..."
-find $MAILDIR/.Junk/cur -type f $LEARN_PERIOD -print0 2> /dev/null |
-  xargs -0 sa-learn --spam --no-sync
+if [ -d $MAILDIR/.Junk/cur ]; then
+  echo "`now` [NOTICE] Learning the spam mails in .Junk..."
+  find $MAILDIR/.Junk/cur -type f $LEARN_PERIOD -print0 2> /dev/null |
+    xargs -0 sa-learn --spam --no-sync
+fi
 
 echo "`now` [NOTICE] Updating the SpamAssassin databse..."
 sa-learn --sync
 
-if [ $NEEDTO_PURGE -eq 1 ]; then
+if [ $NEEDTO_PURGE -eq 1 -a -d $MAILDIR/.Junk/cur ]; then
   echo "`now` [NOTICE] Purging the old spams..."
   find $MAILDIR/.Junk/cur -type f $PURGE_PERIOD -print0 | xargs -0 rm -f
 fi
