@@ -75,11 +75,9 @@ if [ -d $MAILDIR/cur ]; then
     xargs -0 sa-learn --ham --no-sync
 fi
 
-if [ -d $MAILDIR/.INBOX*/cur ]; then
-  echo "`now` [NOTICE] Learning the ham mails in the other boxes..."
-  find $MAILDIR/.INBOX*/cur -type f $LEARN_PERIOD -print0 2> /dev/null |
-    xargs -0 sa-learn --ham --no-sync
-fi
+echo "`now` [NOTICE] Learning the ham mails in the other boxes..."
+find $MAILDIR/.INBOX*/cur -type f $LEARN_PERIOD -print0 2> /dev/null |
+  xargs -0 sa-learn --ham --no-sync
 
 if [ -d $MAILDIR/.Junk/cur ]; then
   echo "`now` [NOTICE] Learning the spam mails in .Junk..."
