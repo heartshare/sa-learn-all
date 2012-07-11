@@ -66,7 +66,7 @@ echo "`now` [NOTICE] Learning begins..."
 
 if [ $NEEDTO_REMOVE_DB -eq 1 -a -f $HOME/.spamassassin ]; then
   echo "`now` [NOTICE] Removing the SpamAssassin database..."
-  rm -rf $HOME/.spamassassin
+  rm -rf $HOME/.spamassassin/bayes_*
 fi
 
 if [ -d $MAILDIR/cur ]; then
